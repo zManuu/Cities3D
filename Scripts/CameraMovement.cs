@@ -6,6 +6,8 @@ public class CameraMovement : MonoBehaviour
     [SerializeField] private float moveSpeed;
     [SerializeField] private float rotationSpeed;
     [SerializeField] private float rotationDepth;
+    [SerializeField] private float smoothSpeed;
+
     private Vector2 screenCenter;
 
     private void Start()
@@ -13,9 +15,9 @@ public class CameraMovement : MonoBehaviour
         screenCenter = new Vector2(Screen.width / 2, Screen.height / 2);
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
-        Vector2 relativeToNull = -(screenCenter - (Vector2)Input.mousePosition);
+        var relativeToNull = -(screenCenter - (Vector2) Input.mousePosition);
 
         // rotation movement
         if (Input.GetMouseButton(2))
@@ -28,8 +30,12 @@ public class CameraMovement : MonoBehaviour
         }
 
         // position movement
-        transform.Translate(Vector3.right * relativeToNull.x * Time.deltaTime * moveSpeed, Space.World);
-        transform.Translate(Vector3.forward * relativeToNull.y * Time.deltaTime * moveSpeed, Space.World);
+        var desiredPos = new Vector3();
+
+        if (Mathf.Abs(relativeToNull.x) > Screen.width / 2 -5)
+            transform.Translate(Vector3.right * relativeToNull.x * Time.deltaTime * moveSpeed, Space.World);
+        if (Mathf.Abs(relativeToNull.y) > Screen.height / 2 -5)
+            transform.Translate(desiredPos += Vector3.forward * relativeToNull.y * Time.deltaTime * moveSpeed, Space.World);
 
     }
 

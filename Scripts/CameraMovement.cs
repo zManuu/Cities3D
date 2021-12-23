@@ -4,6 +4,7 @@ public class CameraMovement : MonoBehaviour
 {
 
     [SerializeField] private float moveSpeed;
+    [SerializeField] private float verticalSpeed;
     [SerializeField] private float rotationSpeed;
     [SerializeField] private float rotationDepth;
     [SerializeField] private float smoothSpeed;
@@ -27,6 +28,14 @@ public class CameraMovement : MonoBehaviour
             //transform.Rotate(relativeToNull.y * rotationSpeed * Time.deltaTime, 0, 0, Space.World);
 
             return;
+        }
+
+        if (Input.GetKey(KeyCode.UpArrow))
+        {
+            transform.Translate(Vector3.up * Time.deltaTime * verticalSpeed, Space.World);
+        } else if (Input.GetKey(KeyCode.DownArrow))
+        {
+            transform.Translate(Vector3.down * Time.deltaTime * verticalSpeed, Space.World);
         }
 
         // position movement

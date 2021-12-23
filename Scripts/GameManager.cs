@@ -87,7 +87,6 @@ public class GameManager : MonoBehaviour
         saveDetails.RoadSegments.ToList().ForEach(roadSegment =>
         {
             Transform road = Instantiate(RoadTransforms[roadSegment.Type], RoadHolder);
-            print(JsonUtility.ToJson(roadSegment));
             road.position = new Vector3(roadSegment.X, 0.5f, roadSegment.Y);
             switch (roadSegment.Rotation)
             {

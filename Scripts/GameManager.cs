@@ -13,7 +13,7 @@ public class GameManager : MonoBehaviour
     {
 
         public string CityName;
-        public RoadSegment[] RoadSegments;
+        public List<RoadData.Data> Roads;
 
         /// <returns>A JSON string containing all the relavent information.</returns>
         public override string ToString()
@@ -22,31 +22,17 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    [Serializable]
-    public class RoadSegment
-    {
-        public int X;
-        public int Y;
-        public int Type;
-        public int Rotation;
-
-        public RoadSegment(int X, int Y, int Type, int Rotation)
-        {
-            this.X = X;
-            this.Y = Y;
-            this.Type = Type;
-            this.Rotation = Rotation;
-        }
-    }
 
 
 
 
 
 
-
-    [SerializeField] private Transform[] RoadTransforms;
+    [SerializeField] public Transform[] RoadPrefabs;
     [SerializeField] private Transform RoadHolder; // will be parent to all the generated roads
+
+    private int CurrentRoadRotation = 0;
+    public SaveDetails Save;
 
     private void Start()
     {
@@ -67,40 +53,83 @@ public class GameManager : MonoBehaviour
             SaveDetails exampleSave = new SaveDetails()
             {
                 CityName = "TEST",
-                RoadSegments = new RoadSegment[]
-                {
-                    new RoadSegment(1, 1, 0, 0),
-                    new RoadSegment(1, 2, 1, 2),
-                    new RoadSegment(2, 2, 0, 1),
-                    new RoadSegment(3, 2, 1, 3),
-                    new RoadSegment(3, 1, 0, 0),
-                    new RoadSegment(3, 0, 1, 0),
-                    new RoadSegment(2, 0, 0, 1),
-                    new RoadSegment(1, 0, 1, 1)
-                }
+                Roads = new List<RoadData.Data>()
             };
 
             File.WriteAllText(filePath, exampleSave.ToString());
         }
 
-        SaveDetails saveDetails = JsonUtility.FromJson<SaveDetails>(File.ReadAllText(filePath));
-        saveDetails.RoadSegments.ToList().ForEach(roadSegment =>
+        Save = JsonUtility.FromJson<SaveDetails>(File.ReadAllText(filePath));
+        print(Save.Roads.Count);
+        Save.Roads.ForEach(roadSegment =>
         {
-            Transform road = Instantiate(RoadTransforms[roadSegment.Type], RoadHolder);
-            road.position = new Vector3(roadSegment.X, 0.5f, roadSegment.Y);
-            switch (roadSegment.Rotation)
-            {
-                case 1:
-                    road.Rotate(new Vector3(0, 90, 0), Space.Self);
-                    break;
-                case 2:
-                    road.Rotate(new Vector3(0, 180, 0), Space.Self);
-                    break;
-                case 3:
-                    road.Rotate(new Vector3(0, 270, 0), Space.Self);
-                    break;
-            }
+            CreateRoad(false, roadSegment.X, roadSegment.Y, roadSegment.Rotation, roadSegment.Type);
         });
+    }
+
+    public void CreateRoad(bool addToSave, int x, int y, int rotation = 0, int type = 0)
+    {
+
+        // check if there is a road on the tile
+        if (Save.Roads.Find(data => data.X == x && data.Y == y) != null && addToSave)
+        {
+            print("road segment detected!");
+            return;
+        }
+
+
+        // create the road (BACKEND & FRONTEND)
+        Transform road = Instantiate(RoadPrefabs[type], RoadHolder);
+        road.position = new Vector3(x, 0.5f, y);
+        road.gameObject.AddComponent(typeof(RoadData));
+        road.GetComponent<RoadData>().SetData(x, y, type, rotation);
+
+        if (addToSave)
+            Save.Roads.Add(road.GetComponent<RoadData>().data);
+
+        switch (road.GetComponent<RoadData>().data.Rotation)
+        {
+            case 1:
+                road.Rotate(new Vector3(0, 90, 0), Space.Self);
+                break;
+            case 2:
+                road.Rotate(new Vector3(0, 180, 0), Space.Self);
+                break;
+            case 3:
+                road.Rotate(new Vector3(0, 270, 0), Space.Self);
+                break;
+        }
+    }
+
+    public void DeleteRoadSegment(int x, int y)
+    {
+        Save.Roads.Remove(Save.Roads.Find(d => d.X == x && d.Y == y));
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.F1) || (Input.GetKeyDown(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.S)))
+        {
+            print("Saving...");
+            SaveCity();
+        }
+    }
+
+    private void SaveCity()
+    {
+        var saveDetails = new SaveDetails();
+        saveDetails.CityName = "zfvailfawbliufwabv";
+        saveDetails.Roads = new List<RoadData.Data>();
+
+        for (var i=0; i<RoadHolder.childCount; i++)
+        {
+            saveDetails.Roads.Add(RoadHolder.GetChild(i).GetComponent<RoadData>().data);
+        }
+
+        File.WriteAllText(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Cities3D\\world.citysave",
+            saveDetails.ToString()
+            );
     }
 
 }

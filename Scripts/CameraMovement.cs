@@ -41,9 +41,9 @@ public class CameraMovement : MonoBehaviour
         // position movement
         var desiredPos = new Vector3();
 
-        if (Mathf.Abs(relativeToNull.x) > Screen.width / 2 -5)
+        if (Mathf.Abs(relativeToNull.x) > Screen.width / 2 -1)
             transform.Translate(Vector3.right * relativeToNull.x * Time.deltaTime * moveSpeed, Space.World);
-        if (Mathf.Abs(relativeToNull.y) > Screen.height / 2 -5)
+        if (Mathf.Abs(relativeToNull.y) > Screen.height / 2 -1)
             transform.Translate(desiredPos += Vector3.forward * relativeToNull.y * Time.deltaTime * moveSpeed, Space.World);
 
     }

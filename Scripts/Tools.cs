@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,18 +18,18 @@ public class Tools : MonoBehaviour
     private List<int> ToolsWithMenu = new List<int>() { 1, 2, 3 };
     private int ActiveTool = 0;
     private int CurrentRoadRotation = 0;
-    private Transform RoadPreview;
+    private int CurrentRoadType = 0;
+    private List<Transform> RoadPreviews;
 
     private void Start()
     {
-        RoadPreview = Instantiate(game.RoadPrefabs[0], BulldozePreview.parent);
-        RoadPreview.name = "Road";
-        RoadPreview.GetChildrenList().ForEach(child =>
+        RoadPreviews = new List<Transform>();
+        game.RoadPrefabs.ToList().ForEach(r =>
         {
-            child.tag = "RoadPreview";
-            Color c = child.GetComponent<Renderer>().material.color;
-            c.a = 0.25f;
-            child.GetComponent<Renderer>().material.color = c;
+            var rp = Instantiate(r, BulldozePreview.parent);
+            rp.name = r.name + "-Preview";
+            rp.GetChildrenList().ForEach(child => child.tag = "RoadPreview");
+            RoadPreviews.Add(rp);
         });
     }
 
@@ -95,16 +96,64 @@ public class Tools : MonoBehaviour
                 break;
             case Tool_Road:
                 // road preview
-                if (RoadPreview.gameObject.activeSelf == false)
+                for(var i=0; i<RoadPreviews.Count; i++)
                 {
-                    RoadPreview.gameObject.SetActive(true);
+                    if (CurrentRoadType != i && RoadPreviews[i].gameObject.activeSelf)
+                    {
+                        RoadPreviews[i].gameObject.SetActive(false);
+                        RoadPreviews[i].rotation = Quaternion.Euler(0, 0, 0);
+                    }
+                }
+                if (RoadPreviews[CurrentRoadType].gameObject.activeSelf == false)
+                {
+                    RoadPreviews[CurrentRoadType].gameObject.SetActive(true);
                 }
                 var r2 = Camera.main.ScreenPointToRay(Input.mousePosition);
                 if (Physics.Raycast(r2, out var rh2))
                 {
                     var roadPos = rh2.point;
-                    RoadPreview.position = new Vector3(Mathf.RoundToInt(roadPos.x), 0.5f, Mathf.RoundToInt(roadPos.z));
+                    RoadPreviews[CurrentRoadType].position = new Vector3(Mathf.RoundToInt(roadPos.x), 0.5f, Mathf.RoundToInt(roadPos.z));
+                    switch (CurrentRoadRotation)
+                    {
+                        case 1:
+                            RoadPreviews[CurrentRoadType].rotation = Quaternion.Euler(0, 90, 0);
+                            break;
+                        case 2:
+                            RoadPreviews[CurrentRoadType].rotation = Quaternion.Euler(0, 180, 0);
+                            break;
+                        case 3:
+                            RoadPreviews[CurrentRoadType].rotation = Quaternion.Euler(0, 270, 0);
+                            break;
+                        case 4:
+                            RoadPreviews[CurrentRoadType].rotation = Quaternion.Euler(0, 360, 0);
+                            break;
+                    }
                 }
+
+
+                // road type selection
+                if (Input.GetKeyDown(KeyCode.Alpha1))
+                {
+                    CurrentRoadType = 0;
+                    CurrentRoadRotation = 0;
+                    RoadPreviews.ForEach(r => r.rotation = Quaternion.Euler(0, 0, 0));
+                } else if (Input.GetKeyDown(KeyCode.Alpha2))
+                {
+                    CurrentRoadType = 1;
+                    CurrentRoadRotation = 0;
+                    RoadPreviews.ForEach(r => r.rotation = Quaternion.Euler(0, 0, 0));
+                } else if (Input.GetKeyDown(KeyCode.Alpha3))
+                {
+                    CurrentRoadType = 2;
+                    CurrentRoadRotation = 0;
+                    RoadPreviews.ForEach(r => r.rotation = Quaternion.Euler(0, 0, 0));
+                } else if (Input.GetKeyDown(KeyCode.Alpha4))
+                {
+                    CurrentRoadType = 3;
+                    CurrentRoadRotation = 0;
+                    RoadPreviews.ForEach(r => r.rotation = Quaternion.Euler(0, 0, 0));
+                }
+
                 break;
             case Tool_None:
                 // deactivate previews, if they are still visible
@@ -112,16 +161,15 @@ public class Tools : MonoBehaviour
                 {
                     BulldozePreview.gameObject.SetActive(false);
                 }
-                if (RoadPreview.gameObject.activeSelf == true)
+                RoadPreviews.ForEach(previewObj =>
                 {
-                    RoadPreview.gameObject.SetActive(false);
-                }
+                    if (previewObj.gameObject.activeSelf == true)
+                    {
+                        previewObj.gameObject.SetActive(false);
+                    }
+                });
                 break;
         }
-
-
-
-
 
 
         if (Input.GetMouseButton(0)) // left mouse
@@ -145,7 +193,7 @@ public class Tools : MonoBehaviour
                     if (Physics.Raycast(roadRay, out var roadHit))
                     {
                         var roadPos = roadHit.point;
-                        game.CreateRoad(true, Mathf.RoundToInt(roadPos.x), Mathf.RoundToInt(roadPos.z), CurrentRoadRotation, 1);
+                        game.CreateRoad(false, Mathf.RoundToInt(roadPos.x), Mathf.RoundToInt(roadPos.z), CurrentRoadRotation, CurrentRoadType);
                     }
                     break;
             }
@@ -154,7 +202,7 @@ public class Tools : MonoBehaviour
             if (ActiveTool == Tool_Road)
             {
                 CurrentRoadRotation += 1;
-                if (CurrentRoadRotation >= 4)
+                if (CurrentRoadRotation >= 5)
                     CurrentRoadRotation = 0;
             }
         }

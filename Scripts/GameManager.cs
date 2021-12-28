@@ -60,21 +60,35 @@ public class GameManager : MonoBehaviour
         }
 
         Save = JsonUtility.FromJson<SaveDetails>(File.ReadAllText(filePath));
-        print(Save.Roads.Count);
         Save.Roads.ForEach(roadSegment =>
         {
-            CreateRoad(false, roadSegment.X, roadSegment.Y, roadSegment.Rotation, roadSegment.Type);
+            CreateRoad(true, roadSegment.X, roadSegment.Y, roadSegment.Rotation, roadSegment.Type);
         });
     }
 
-    public void CreateRoad(bool addToSave, int x, int y, int rotation = 0, int type = 0)
+    public void CreateRoad(bool generatedBySave, int x, int y, int rotation = 0, int type = 0)
     {
 
         // check if there is a road on the tile
-        if (Save.Roads.Find(data => data.X == x && data.Y == y) != null && addToSave)
+        if (Save.Roads.Find(data => data.X == x && data.Y == y) != null && !generatedBySave)
         {
-            print("road segment detected!");
             return;
+        }
+
+
+
+        if (!generatedBySave)
+        {
+            /*RoadData.Data[,] r = new RoadData.Data[3,3];
+            r[0,0] = Save.Roads.Find(rs => rs.X == x - 1 && rs.Y == y - 1);
+            r[0,1] = Save.Roads.Find(rs => rs.X == x - 1 && rs.Y == y);
+            r[0,2] = Save.Roads.Find(rs => rs.X == x - 1 && rs.Y == y + 1);
+            r[1,0] = Save.Roads.Find(rs => rs.X == x && rs.Y == y - 1);
+            r[1,1] = Save.Roads.Find(rs => rs.X == x && rs.Y == y);
+            r[1,2] = Save.Roads.Find(rs => rs.X == x && rs.Y == y + 1);
+            r[2,0] = Save.Roads.Find(rs => rs.X == x + 1 && rs.Y == y - 1);
+            r[2,1] = Save.Roads.Find(rs => rs.X == x + 1 && rs.Y == y);
+            r[2,2] = Save.Roads.Find(rs => rs.X == x + 1 && rs.Y == y + 1);*/
         }
 
 
@@ -84,7 +98,7 @@ public class GameManager : MonoBehaviour
         road.gameObject.AddComponent(typeof(RoadData));
         road.GetComponent<RoadData>().SetData(x, y, type, rotation);
 
-        if (addToSave)
+        if (!generatedBySave)
             Save.Roads.Add(road.GetComponent<RoadData>().data);
 
         switch (road.GetComponent<RoadData>().data.Rotation)
@@ -97,6 +111,9 @@ public class GameManager : MonoBehaviour
                 break;
             case 3:
                 road.Rotate(new Vector3(0, 270, 0), Space.Self);
+                break;
+            case 4:
+                road.Rotate(new Vector3(0, 360, 0), Space.Self);
                 break;
         }
     }

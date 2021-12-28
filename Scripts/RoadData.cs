@@ -31,8 +31,5 @@ public class RoadData : MonoBehaviour
     {
         this.data = new Data(x, y, type, rotation);
     }
-   
-
-    
 
 }
